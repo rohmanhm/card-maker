@@ -1,5 +1,5 @@
 {
-  "presets": [ ["latest", { "modules": false }], "stage-0" ],
+  "presets": [ ["latest", { "modules": false }], "stage-0", "flow" ],
   "plugins": [
     "add-module-exports",
     "lodash"

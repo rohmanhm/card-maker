@@ -1,3 +1,5 @@
+// @flow
+
 /**
  * Card Maker
  *
@@ -11,15 +13,17 @@ import {
   makeImage,
   colorNameToHex,
   isColor,
-  packageConfig
+  packageConfig,
+  PromiseEach
 } from './utils'
-import './polyfill'
 
 const _config = new WeakMap()
 
 export default class CardMaker {
+  __name__: string
+  __version__: string
 
-  constructor(configs = {}) {
+  constructor(configs: any = {}) {
 
     this.__name__ = packageConfig.name
     this.__version__ = packageConfig.version
@@ -105,9 +109,9 @@ export default class CardMaker {
    *
    * @memberOf CardMaker
    */
-  changeBackground(type, props) {
-    const config = this.getConfig(['width', 'height'])
-    const ctx = this.getContext()
+  changeBackground(type: string, props: any): any {
+    const config: any = this.getConfig(['width', 'height'])
+    const ctx: any = this.getContext()
     const { img, color } = props
 
     ctx.beginPath()
@@ -140,13 +144,14 @@ export default class CardMaker {
    * @memberOf CardMaker
    */
   enableDownload() {
-    const download = this.getConfig('download')
+    const download: any = this.getConfig('download')
 
     // download image
     if (download.length > 0) { // Means defined
-      let downloadButton = document.querySelector(download)
+      let downloadButton: any = document.querySelector(download)
       if (!downloadButton) throw new Error(`Element ${ download } can't found in your DOM. Please check again, maybe you make a typo`)
-      downloadButton.addEventListener('click', (e)=> {
+
+      downloadButton.addEventListener('click', (e: any) => {
         e.preventDefault()
         window.location.href = this.getImage()
       })
@@ -161,8 +166,8 @@ export default class CardMaker {
    *
    * @memberOf CardMaker
    */
-  getConfig(key) {
-    const config = _config.get(this)
+  getConfig(key: void | string | Array<string>): any {
+    const config: any = _config.get(this)
 
     if (!key) return config
 
@@ -201,7 +206,7 @@ export default class CardMaker {
    *
    * @memberOf CardMaker
    */
-  getImage(format = 'jpeg', quality = 1.0) {
+  getImage(format: string = 'jpeg', quality: number = 1.0): string {
     return this.getConfig('canvas').toDataURL(`image/${ format }`, quality)
   }
 
@@ -213,7 +218,7 @@ export default class CardMaker {
    *
    * @memberOf CardMaker
    */
-  makeCanvas(props = {}) {
+  makeCanvas(props: any = {}): any {
     if (this.getConfig('canvas') != undefined) throw new Error('Cannot create canvas, You\'ve already set the canvas')
 
     let canvas = makeElement('canvas', props)
@@ -231,19 +236,19 @@ export default class CardMaker {
    */
   putCanvas() {
     const config = this.getConfig(['el', 'width', 'height'])
-    let elem, newCanvas
+    let elem: any
 
-    newCanvas = this.makeCanvas({
+    const newCanvas: any = this.makeCanvas({
       width: config['width'],
       height: config['height']
     })
 
     elem = document.querySelector(config['el'])
-    if (elem === null || elem === undefined) {
-      throw new Error(`Cannot find ${ elem } element in your DOM`)
+    if (elem) {
+      return elem.appendChild(newCanvas)
     }
 
-    return elem.appendChild(newCanvas)
+    throw new Error(`Cannot find ${ config['el'] } element in your DOM`)
   }
 
   /**
@@ -298,8 +303,8 @@ export default class CardMaker {
   renderImage() {
     let images = this.getConfig('template')['images']
 
-    return Promise.each(images, (image) => {
-      return makeImage(image.value).then( img => {
+    return PromiseEach(images, (image: any) => {
+      return makeImage(image.value).then((img: any) => {
 
         const ctx = this.getContext()
         const { name, value, description } = image
@@ -307,6 +312,7 @@ export default class CardMaker {
 
         setTimeout(() => {
           this.setToElement(image.name, image.value, image.description)
+          // $FlowIgnore: suppressing this error
           ctx.drawImage(img, sx || 0, sy || 0, swidth || img.width, sheight || img.height, x || 0, y || 0, width || img.width, height || img.height)
         }, 1)
       })
@@ -324,7 +330,7 @@ export default class CardMaker {
   renderText() {
     let text = this.getConfig('template')['text']
 
-    return Promise.each(text, (val, key) => {
+    return PromiseEach(text, (val, key) => {
       setTimeout(() => {
         this.setToElement(val.name, val.value, val.description)
         this.writeText(val.value, val.props)
@@ -342,8 +348,8 @@ export default class CardMaker {
    *
    * @memberOf CardMaker
    */
-  setConfig(...params) {
-    const config = this.getConfig()
+  setConfig(...params: Array<any>) {
+    const config: any = this.getConfig()
     if (!params) return false
 
     if (typeof params[0] == 'object') {
@@ -378,7 +384,7 @@ export default class CardMaker {
 
     for (let i in sorteredTemplate) {
       sorteredTemplate[i].forEach( obj => {
-        let selector = document.querySelector(`[name=${ obj.name }]`)
+        let selector: any = document.querySelector(`[name=${ obj.name }]`)
         if (!selector) return false
 
         selector.addEventListener('keyup', ({ target: { value } }) => {
@@ -400,11 +406,11 @@ export default class CardMaker {
    * 
    * @memberOf CardMaker
    */
-  setToElement (name, value, desc = '') {
-    let enableSetToElement = this.getConfig('enableSetToElement')
+  setToElement (name: string, value: string, desc: string = ''): string | boolean {
+    let enableSetToElement: any = this.getConfig('enableSetToElement')
     if (!enableSetToElement) return false
 
-    const el = document.querySelector(`[name=${ name }]`)
+    const el: any = document.querySelector(`[name=${ name }]`)
     if (!el) return false
 
     el.setAttribute('placeholder', desc)
@@ -418,9 +424,9 @@ export default class CardMaker {
    *
    * @memberOf CardMaker
    */
-  writeText(text, props = {}) {
-    const ctx = this.getContext()
-    const config = this.getConfig(['color', 'align'])
+  writeText(text: string, props: any = {}): any {
+    const ctx: any = this.getContext()
+    const config: any = this.getConfig(['color', 'align'])
 
     if (text == '' || text == undefined ) console.warn('We\'ve found you insert an empty text, please make sure you make it valuable.')
 
